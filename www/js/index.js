@@ -35,9 +35,9 @@ function setupDialer() {
     callButton.addEventListener('click', () => {
         const number = phoneNumberInput.value;
         if (number) {
-            window.PhoneCallTrap.makeCall(number, () => {
+            cordova.plugins.phonecalltrap.makeCall(number, function() {
                 console.log('Call initiated successfully');
-            }, (err) => {
+            }, function(err) {
                 console.error('Error making call:', err);
             });
         }
@@ -45,34 +45,28 @@ function setupDialer() {
 }
 
 function setupPhoneCallTrap() {
-    window.PhoneCallTrap.onCall((callInfo) => {
+    cordova.plugins.phonecalltrap.onCall(function(callInfo) {
         console.log('Call info:', callInfo);
         updateCallList(callInfo);
     });
 }
 
 function requestPermissions() {
-    const permissions = [
-        'android.permission.READ_PHONE_STATE',
-        'android.permission.READ_CALL_LOG',
-        'android.permission.PROCESS_OUTGOING_CALLS',
-        'android.permission.CALL_PHONE'
-    ];
-
-    cordova.plugins.permissions.requestPermissions(permissions, permissionSuccess, permissionError);
-}
-
-function permissionSuccess() {
-    console.log('Permissions granted');
-    fetchCallLogs();
-}
-
-function permissionError() {
-    console.error('Permissions not granted');
+    cordova.plugins.permissions.requestPermissions([
+        cordova.plugins.permissions.READ_PHONE_STATE,
+        cordova.plugins.permissions.READ_CALL_LOG,
+        cordova.plugins.permissions.PROCESS_OUTGOING_CALLS,
+        cordova.plugins.permissions.CALL_PHONE
+    ], function() {
+        console.log('Permissions granted');
+        fetchCallLogs();
+    }, function() {
+        console.error('Permissions not granted');
+    });
 }
 
 function fetchCallLogs() {
-    window.PhoneCallTrap.getCallLog((calls) => {
+    cordova.plugins.phonecalltrap.getCallLog(function(calls) {
         const incoming = calls.filter(call => call.type === 'INCOMING');
         const outgoing = calls.filter(call => call.type === 'OUTGOING');
         const missed = calls.filter(call => call.type === 'MISSED');
@@ -80,7 +74,7 @@ function fetchCallLogs() {
         displayCalls('incoming', incoming);
         displayCalls('outgoing', outgoing);
         displayCalls('missed', missed);
-    }, (error) => {
+    }, function(error) {
         console.error('Error fetching call logs:', error);
     });
 }
