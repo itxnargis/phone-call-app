@@ -3,7 +3,6 @@ document.addEventListener('deviceready', onDeviceReady, false);
 function onDeviceReady() {
     setupTabs();
     setupDialer();
-    setupPhoneCallTrap();
     fetchCallLogs();
 }
 
@@ -35,43 +34,36 @@ function setupDialer() {
     callButton.addEventListener('click', () => {
         const number = phoneNumberInput.value;
         if (number) {
-            window.PhoneCallTrap.makeCall(number);
+            // Attempt to initiate a call
+            try {
+                window.PhoneCallTrap.makeCall(number);
+            } catch (error) {
+                console.error('Error making call:', error);
+            }
         }
     });
 }
 
-function setupPhoneCallTrap() {
-    window.PhoneCallTrap.onCall((callInfo) => {
-        console.log('Call info:', callInfo);
-        // Update UI based on call info
-        updateCallList(callInfo);
-    });
-}
-
 function fetchCallLogs() {
-    window.PhoneCallTrap.getCallLog((calls) => {
-        const incoming = calls.filter(call => call.type === 'INCOMING');
-        const outgoing = calls.filter(call => call.type === 'OUTGOING');
-        const missed = calls.filter(call => call.type === 'MISSED');
-
-        displayCalls('incoming', incoming);
-        displayCalls('outgoing', outgoing);
-        displayCalls('missed', missed);
-    }, (error) => {
-        console.error('Error fetching call logs:', error);
-    });
+    try {
+        window.PhoneCallTrap.getCallLog((calls) => {
+            displayCalls('incoming', calls.filter(call => call.type === 'INCOMING'));
+            displayCalls('outgoing', calls.filter(call => call.type === 'OUTGOING'));
+            displayCalls('missed', calls.filter(call => call.type === 'MISSED'));
+        }, (error) => {
+            console.error('Error fetching call logs:', error);
+        });
+    } catch (error) {
+        console.error('Error setting up call log fetching:', error);
+    }
 }
 
 function displayCalls(tabId, calls) {
     const tabContent = document.getElementById(tabId);
     tabContent.innerHTML = calls.map(call => `
         <div class="call-item">
-            <span class="number">${call.number}</span>
-            <span class="date">${new Date(call.date).toLocaleString()}</span>
+            <span>${call.number}</span>
+            <span>${new Date(call.date).toLocaleString()}</span>
         </div>
     `).join('');
-}
-
-function updateCallList(callInfo) {
-    // Implement logic to update the appropriate call list based on callInfo
 }
