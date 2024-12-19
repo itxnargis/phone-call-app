@@ -4,7 +4,7 @@ function onDeviceReady() {
     setupTabs();
     setupDialer();
     setupPhoneCallTrap();
-    fetchCallLogs();
+    requestPermissions();
 }
 
 function setupTabs() {
@@ -35,7 +35,11 @@ function setupDialer() {
     callButton.addEventListener('click', () => {
         const number = phoneNumberInput.value;
         if (number) {
-            window.PhoneCallTrap.makeCall(number);
+            window.PhoneCallTrap.makeCall(number, () => {
+                console.log('Call initiated successfully');
+            }, (err) => {
+                console.error('Error making call:', err);
+            });
         }
     });
 }
@@ -43,9 +47,28 @@ function setupDialer() {
 function setupPhoneCallTrap() {
     window.PhoneCallTrap.onCall((callInfo) => {
         console.log('Call info:', callInfo);
-        // Update UI based on call info
         updateCallList(callInfo);
     });
+}
+
+function requestPermissions() {
+    const permissions = [
+        'android.permission.READ_PHONE_STATE',
+        'android.permission.READ_CALL_LOG',
+        'android.permission.PROCESS_OUTGOING_CALLS',
+        'android.permission.CALL_PHONE'
+    ];
+
+    cordova.plugins.permissions.requestPermissions(permissions, permissionSuccess, permissionError);
+}
+
+function permissionSuccess() {
+    console.log('Permissions granted');
+    fetchCallLogs();
+}
+
+function permissionError() {
+    console.error('Permissions not granted');
 }
 
 function fetchCallLogs() {
@@ -73,5 +96,5 @@ function displayCalls(tabId, calls) {
 }
 
 function updateCallList(callInfo) {
-    // Implement logic to update the appropriate call list based on callInfo
+    fetchCallLogs(); // Refresh all call logs when a new call is detected
 }
