@@ -4,7 +4,7 @@ function onDeviceReady() {
     setupTabs();
     setupDialer();
     setupPhoneCallTrap();
-    requestPermissions();
+    fetchCallLogs();
 }
 
 function setupTabs() {
@@ -35,38 +35,21 @@ function setupDialer() {
     callButton.addEventListener('click', () => {
         const number = phoneNumberInput.value;
         if (number) {
-            cordova.plugins.phonecalltrap.makeCall(number, function() {
-                console.log('Call initiated successfully');
-            }, function(err) {
-                console.error('Error making call:', err);
-            });
+            window.PhoneCallTrap.makeCall(number);
         }
     });
 }
 
 function setupPhoneCallTrap() {
-    cordova.plugins.phonecalltrap.onCall(function(callInfo) {
+    window.PhoneCallTrap.onCall((callInfo) => {
         console.log('Call info:', callInfo);
+        // Update UI based on call info
         updateCallList(callInfo);
     });
 }
 
-function requestPermissions() {
-    cordova.plugins.permissions.requestPermissions([
-        cordova.plugins.permissions.READ_PHONE_STATE,
-        cordova.plugins.permissions.READ_CALL_LOG,
-        cordova.plugins.permissions.PROCESS_OUTGOING_CALLS,
-        cordova.plugins.permissions.CALL_PHONE
-    ], function() {
-        console.log('Permissions granted');
-        fetchCallLogs();
-    }, function() {
-        console.error('Permissions not granted');
-    });
-}
-
 function fetchCallLogs() {
-    cordova.plugins.phonecalltrap.getCallLog(function(calls) {
+    window.PhoneCallTrap.getCallLog((calls) => {
         const incoming = calls.filter(call => call.type === 'INCOMING');
         const outgoing = calls.filter(call => call.type === 'OUTGOING');
         const missed = calls.filter(call => call.type === 'MISSED');
@@ -74,7 +57,7 @@ function fetchCallLogs() {
         displayCalls('incoming', incoming);
         displayCalls('outgoing', outgoing);
         displayCalls('missed', missed);
-    }, function(error) {
+    }, (error) => {
         console.error('Error fetching call logs:', error);
     });
 }
@@ -90,5 +73,5 @@ function displayCalls(tabId, calls) {
 }
 
 function updateCallList(callInfo) {
-    fetchCallLogs(); // Refresh all call logs when a new call is detected
+    // Implement logic to update the appropriate call list based on callInfo
 }
